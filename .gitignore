@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.env
+venv/
+.vscode/
+.idea/
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+models/checkpoints/*
+models/exported/*
+outputs/*
