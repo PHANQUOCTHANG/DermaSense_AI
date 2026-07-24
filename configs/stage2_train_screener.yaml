@@ -1,0 +1,23 @@
+# ============================================================
+# DermaSense AI — Stage 2: Huấn luyện Safety Screener (Binary)
+# ============================================================
+
+training:
+  epochs: 30
+  batch_size: 32
+  learning_rate: 0.0001
+  weight_decay: 0.05
+  early_stopping_patience: 7
+
+model:
+  name: "tf_efficientnetv2_s.in21k_ft_in1k" # Dùng bản S cho Stage 2 để tăng tốc độ
+  pretrained: true
+  drop_rate: 0.2
+
+loss:
+  gamma: 2.0
+  alpha: null # Tự động tính từ class weights
+
+threshold_tuning:
+  target_sensitivity: 0.95
+  target_npv: 0.97
