@@ -28,11 +28,23 @@ class VisionBranch(nn.Module):
         # Lấy kích thước vector đặc trưng ở lớp cuối cùng
         in_features = self.backbone.get_classifier().in_features
         
+        # Lưu biến để biết có phải trích xuất feature không
+        self.extract_features = False
+        
         # Thay thế Classifier Head
         # nn.Identity() nếu muốn lấy features (cho Stage B)
         # nn.Linear() nếu muốn output trực tiếp (cho Stage A)
         self.backbone.classifier = nn.Linear(in_features, num_classes)
         
+    def set_extract_features(self, extract: bool):
+        """Chuyển đổi giữa chế độ Classification và Feature Extraction."""
+        self.extract_features = extract
+        if extract:
+            self.backbone.classifier = nn.Identity()
+        else:
+            # Khôi phục classifier (cần được khởi tạo lại hoặc reload trọng số nếu cần)
+            pass
+            
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Thực thi qua mô hình.
         

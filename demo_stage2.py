@@ -23,7 +23,7 @@ def main():
         print(f"❌ Không tìm thấy ảnh: {img_path}")
         return
 
-    print(f"\n🔍 Đang xử lý ảnh: {img_path.name}")
+    print(f"\n[INFO] Dang xu ly anh: {img_path.name}")
     print("-" * 50)
 
     # 1. Load cấu hình
@@ -35,7 +35,7 @@ def main():
         stage2_config = yaml.safe_load(f)
 
     # 2. Tiền xử lý (Stage 1)
-    print("⏳ Bước 1: Tiền xử lý (Dọn dẹp ảnh)...")
+    print("... Buoc 1: Tien xu ly (Don dep anh)...")
     try:
         processed_img, is_blurry, is_skin = preprocess_single_image(str(img_path), stage1_config["preprocessing"])
     except Exception as e:
@@ -43,14 +43,14 @@ def main():
         return
 
     if not is_skin:
-        print("❌ HỆ THỐNG TỪ CHỐI: Ảnh này không giống ảnh chụp da.")
+        print("[-] HE THONG TU CHOI: Anh nay khong giong anh chup da.")
         return
 
     if is_blurry and not stage1_config["preprocessing"]["blur_detection"]["flag_only"]:
-        print("❌ HỆ THỐNG TỪ CHỐI: Ảnh quá mờ, không thể chẩn đoán chính xác.")
+        print("[-] HE THONG TU CHOI: Anh qua mo, khong the chan doan chinh xac.")
         return
 
-    print("✅ Tiền xử lý hoàn tất (Sạch lông, cân bằng màu, chuẩn kích thước).")
+    print("[+] Tien xu ly hoan tat (Sach long, can bang mau, chuan kich thuoc).")
 
     # Lưu lại ảnh đã xử lý để xem
     out_dir = Path("outputs/demo")
@@ -59,7 +59,7 @@ def main():
     cv2.imwrite(str(out_path), processed_img)
 
     # 3. Chạy qua mô hình (Stage 2)
-    print("\n⏳ Bước 2: AI đang phân tích nguy cơ...")
+    print("\n... Buoc 2: AI dang phan tich nguy co...")
     
     # Load model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -71,8 +71,8 @@ def main():
     
     ckpt_path = Path("models/checkpoints/stage_a/best_model.pt")
     if not ckpt_path.exists():
-        print(f"❌ Không tìm thấy trọng số mô hình tại {ckpt_path}.")
-        print("💡 Gợi ý: Chạy file create_dummy_checkpoint.py hoặc tự huấn luyện trên cloud trước.")
+        print(f"[-] Khong tim thay trong so mo hinh tai {ckpt_path}.")
+        print("[!] Goi y: Chay file create_dummy_checkpoint.py hoac tu huan luyen tren cloud truoc.")
         return
         
     checkpoint = torch.load(ckpt_path, map_location=device, weights_only=False)
@@ -96,21 +96,21 @@ def main():
     prob_high = probs[1].item()
     
     print("\n" + "=" * 50)
-    print("📊 KẾT QUẢ DỰ ĐOÁN:")
+    print("KET QUA DU DOAN:")
     print("=" * 50)
-    print(f"- Xác suất LÀNH TÍNH (Low Risk): {prob_low:.2%}")
-    print(f"- Xác suất CẦN CHÚ Ý (High Risk): {prob_high:.2%}")
+    print(f"- Xac suat LANH TINH (Low Risk): {prob_low:.2%}")
+    print(f"- Xac suat CAN CHU Y (High Risk): {prob_high:.2%}")
     print("-" * 50)
     
     if prob_high > 0.5:
-        print("⚠️ CẢNH BÁO: Phát hiện dấu hiệu rủi ro cao (Khả năng có thể là Melanoma, BCC, hoặc AK).")
-        print("🩺 KHUYẾN NGHỊ: Người dùng nên đi khám bác sĩ da liễu ngay lập tức!")
+        print("[!] CANH BAO: Phat hien dau hieu rui ro cao (Kha nang co the la Melanoma, BCC, hoac AK).")
+        print("[!] KHUYEN NGHI: Nguoi dung nen di kham bac si da lieu ngay lap tuc!")
     else:
-        print("✅ KẾT LUẬN: Tổn thương da có vẻ lành tính (Nevus, VASC...).")
-        print("🩺 KHUYẾN NGHỊ: Tiếp tục theo dõi định kỳ, không có gì đáng lo ngại.")
+        print("[+] KET LUAN: Ton thuong da co ve lanh tinh (Nevus, VASC...).")
+        print("[+] KHUYEN NGHI: Tiep tuc theo doi dinh ky, khong co gi dang lo ngai.")
         
     print("=" * 50)
-    print(f"📂 Ảnh sau tiền xử lý đã được lưu tại: {out_path}")
+    print(f"[+] Anh sau tien xu ly da duoc luu tai: {out_path}")
 
 if __name__ == "__main__":
     main()
