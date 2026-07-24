@@ -19,6 +19,8 @@ class DermDataset(Dataset):
         img_dir: str,
         is_binary: bool = False,
         transforms=None,
+        use_clinical: bool = False,
+        clinical_csv: Optional[str] = None
     ):
         """Khởi tạo Dataset.
         
@@ -28,10 +30,20 @@ class DermDataset(Dataset):
             is_binary: Nếu True, sẽ map 7 lớp về 2 lớp (0: Low Risk, 1: High Risk).
                        Nếu False, giữ nguyên 7 lớp (0-6).
             transforms: Pipeline augmentation của albumentations.
+            use_clinical: Cờ báo hiệu có sử dụng metadata lâm sàng hay không (Stage 3).
+            clinical_csv: Đường dẫn đến file metadata_encoded.csv.
         """
         self.img_dir = Path(img_dir)
         self.is_binary = is_binary
         self.transforms = transforms
+        self.use_clinical = use_clinical
+        
+        # Đọc metadata nếu dùng Multimodal
+        self.metadata = None
+        if self.use_clinical and clinical_csv is not None:
+            df = pd.read_csv(clinical_csv)
+            # Chuyển image_id thành index để tra cứu cho lẹ O(1)
+            self.metadata = df.set_index('image_id')
         
         # Đọc cấu hình để lấy nhãn
         with open("configs/base_config.yaml", "r", encoding="utf-8") as f:
@@ -65,13 +77,14 @@ class DermDataset(Dataset):
     def __len__(self) -> int:
         return len(self.samples)
         
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
-        img_path, label = self.samples[idx]
+    def __getitem__(self, idx: int) -> Union[Tuple[torch.Tensor, int], Tuple[torch.Tensor, torch.Tensor, int]]:
+        img_path_str, label = self.samples[idx]
+        img_path = Path(img_path_str)
         
         # Đọc ảnh bằng OpenCV
-        image = cv2.imread(img_path)
+        image = cv2.imread(img_path_str)
         if image is None:
-            raise ValueError(f"Không thể đọc ảnh: {img_path}")
+            raise ValueError(f"Không thể đọc ảnh: {img_path_str}")
             
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
@@ -80,5 +93,29 @@ class DermDataset(Dataset):
             augmented = self.transforms(image=image)
             image = augmented["image"]
             
-        # Trả về FloatTensor cho features, tensor int64 cho label
-        return image, torch.tensor(label, dtype=torch.long)
+        label_tensor = torch.tensor(label, dtype=torch.long)
+            
+        # Trả về Multimodal nếu yêu cầu
+        if self.use_clinical and self.metadata is not None:
+            img_id = img_path.stem
+            
+            # Lấy dòng metadata tương ứng với image_id
+            if img_id in self.metadata.index:
+                row = self.metadata.loc[img_id]
+                
+                # Trích xuất 5 features (đã được encode thành số ở Stage 1)
+                age = float(row.get('age', 0.0))
+                sex = float(row.get('sex', 0.5))
+                anatom_site = float(row.get('anatom_site', 0.0))
+                duration = float(row.get('duration', 0.0))
+                symptom = float(row.get('symptoms', 0.0))
+                
+                clinical_features = torch.tensor([age, sex, anatom_site, duration, symptom], dtype=torch.float32)
+            else:
+                # Nếu thiếu metadata, trả về vector 0
+                clinical_features = torch.zeros(5, dtype=torch.float32)
+                
+            return image, clinical_features, label_tensor
+
+        # Trả về FloatTensor cho features, tensor int64 cho label (Vision-only)
+        return image, label_tensor
