@@ -1,0 +1,62 @@
+# ============================================================
+# DermaSense AI — Stage 4: XAI & Evaluation Configuration
+# ============================================================
+
+# --- Grad-CAM++ ---
+gradcam:
+  method: "gradcam++"            # gradcam | gradcam++ | scorecam
+  target_layers: "auto"          # auto = last conv layer of backbone
+  colormap: "jet"                # jet | turbo | inferno
+  alpha_overlay: 0.5             # Độ trong suốt heatmap chồng lên ảnh gốc
+  save_dir: "outputs/xai_heatmaps"
+  num_samples: 50                # Số ảnh mẫu để sinh heatmap cho báo cáo
+
+# --- Temperature Scaling (Calibration) ---
+calibration:
+  method: "temperature_scaling"
+  # Học 1 tham số T trên validation set
+  optimizer: "lbfgs"             # LBFGS converge nhanh cho 1 param
+  max_iter: 100
+  # ECE calculation
+  ece:
+    n_bins: 15                   # Số bin cho reliability diagram
+    target_ece: 0.05             # Mục tiêu ECE < 0.05
+
+# --- OOD Detection ---
+ood:
+  method: "mahalanobis"          # mahalanobis | energy | entropy
+  # Mahalanobis distance
+  mahalanobis:
+    use_pca: true                # Giảm chiều feature trước khi tính
+    pca_components: 128
+    percentile_threshold: 95     # Ảnh có distance > percentile 95 → OOD
+  # Entropy-based fallback
+  entropy:
+    threshold: 1.5               # Entropy > ngưỡng → "không chắc chắn"
+    fallback_message: "Cần thêm dữ liệu / khám trực tiếp"
+
+# --- Evaluation Metrics ---
+evaluation:
+  metrics:
+    - accuracy
+    - balanced_accuracy
+    - sensitivity           # = recall
+    - specificity
+    - precision
+    - f1_weighted
+    - auc_roc_macro
+    - npv                   # Negative Predictive Value
+    - cohen_kappa
+  
+  # Confusion matrix settings
+  confusion_matrix:
+    normalize: true          # row-normalized
+    save_path: "outputs/figures/confusion_matrix.png"
+  
+  # ROC curve
+  roc:
+    save_path: "outputs/figures/roc_curve.png"
+  
+  # Reliability diagram
+  reliability:
+    save_path: "outputs/figures/reliability_diagram.png"

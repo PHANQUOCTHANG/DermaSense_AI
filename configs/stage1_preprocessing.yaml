@@ -1,0 +1,42 @@
+# ============================================================
+# DermaSense AI — Stage 1: Preprocessing Configuration
+# ============================================================
+
+preprocessing:
+  # --- Blur Detection (Laplacian variance) ---
+  blur_detection:
+    method: "laplacian"
+    threshold: 15.0           # Đã hạ ngưỡng (từ 100 xuống 15) để cho phép ảnh chụp từ điện thoại (Clinical images) đi qua.
+    flag_only: true           # true = gắn cờ, false = loại bỏ hoàn toàn
+
+  # --- Hair Removal (DullRazor) ---
+  hair_removal:
+    enabled: true
+    kernel_size: 17           # Morphological black-hat kernel
+    threshold: 10             # Ngưỡng nhị phân hoá lông
+    inpaint_radius: 6         # Bán kính inpainting
+
+  # --- Color Balance ---
+  color_balance:
+    method: "gray_world"      # gray_world | shades_of_gray
+
+  # --- Skin Detection ---
+  skin_classifier:
+    enabled: true
+    model: "mobilenetv3_small"
+    confidence_threshold: 0.8
+
+  # --- Resize & Normalize ---
+  resize:
+    target_size: [384, 384]   # EfficientNetV2-M input size
+    interpolation: "bilinear"
+  
+  normalize:
+    mean: [0.485, 0.456, 0.406]  # ImageNet stats
+    std: [0.229, 0.224, 0.225]
+
+# --- Output ---
+output:
+  format: "imagefolder"       # imagefolder | webdataset
+  save_rejected: true         # Lưu ảnh bị loại để review
+  rejected_dir: "data/processed/rejected"
