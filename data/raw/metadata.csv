@@ -1,0 +1,51 @@
+image_id,diagnosis,age,sex,anatom_site,duration,symptoms
+ISIC_0000000,BCC,23,male,anterior torso,356,bleeding
+ISIC_0000001,DF,70,female,upper extremity,316,none
+ISIC_0000002,AK,61,female,head/neck,74,itch
+ISIC_0000003,DF,54,male,posterior torso,10,none
+ISIC_0000004,NV,79,female,lower extremity,38,none
+ISIC_0000005,NV,65,female,posterior torso,149,pain
+ISIC_0000006,MEL,26,male,upper extremity,205,none
+ISIC_0000007,AK,52,male,head/neck,20,itch
+ISIC_0000008,BKL,60,female,anterior torso,222,pain
+ISIC_0000009,AK,23,female,lower extremity,156,bleeding
+ISIC_0000010,DF,57,male,anterior torso,78,none
+ISIC_0000011,MEL,20,male,upper extremity,363,none
+ISIC_0000012,NV,49,male,anterior torso,175,itch
+ISIC_0000013,VASC,20,male,anterior torso,272,pain
+ISIC_0000014,MEL,73,male,head/neck,195,bleeding
+ISIC_0000015,AK,73,female,posterior torso,149,itch
+ISIC_0000016,VASC,71,male,upper extremity,265,none
+ISIC_0000017,AK,26,female,posterior torso,324,none
+ISIC_0000018,VASC,37,female,lower extremity,330,pain
+ISIC_0000019,VASC,47,male,upper extremity,320,itch
+ISIC_0000020,VASC,55,female,posterior torso,147,none
+ISIC_0000021,BCC,24,female,posterior torso,279,none
+ISIC_0000022,NV,74,male,posterior torso,364,bleeding
+ISIC_0000023,BCC,32,female,posterior torso,312,none
+ISIC_0000024,VASC,57,male,lower extremity,146,none
+ISIC_0000025,NV,21,male,posterior torso,359,itch
+ISIC_0000026,BKL,61,male,lower extremity,269,itch
+ISIC_0000027,NV,36,male,head/neck,77,none
+ISIC_0000028,VASC,30,male,upper extremity,65,bleeding
+ISIC_0000029,DF,69,male,head/neck,80,bleeding
+ISIC_0000030,BKL,39,male,upper extremity,329,bleeding
+ISIC_0000031,BCC,67,female,anterior torso,188,none
+ISIC_0000032,AK,20,male,lower extremity,203,pain
+ISIC_0000033,DF,82,male,anterior torso,116,itch
+ISIC_0000034,VASC,45,female,head/neck,143,itch
+ISIC_0000035,BKL,33,male,posterior torso,295,pain
+ISIC_0000036,VASC,36,male,posterior torso,313,pain
+ISIC_0000037,AK,63,male,head/neck,363,pain
+ISIC_0000038,VASC,43,female,lower extremity,357,pain
+ISIC_0000039,AK,44,male,anterior torso,144,none
+ISIC_0000040,BKL,67,male,posterior torso,307,pain
+ISIC_0000041,VASC,55,female,head/neck,75,pain
+ISIC_0000042,NV,29,male,head/neck,196,pain
+ISIC_0000043,NV,49,male,head/neck,348,pain
+ISIC_0000044,BKL,26,male,posterior torso,169,itch
+ISIC_0000045,BCC,44,male,lower extremity,288,pain
+ISIC_0000046,BCC,24,female,lower extremity,126,pain
+ISIC_0000047,MEL,58,female,anterior torso,362,none
+ISIC_0000048,MEL,70,female,lower extremity,265,itch
+ISIC_0000049,AK,29,female,head/neck,216,pain
