@@ -1,0 +1,48 @@
+# ============================================================
+# DermaSense AI — Stage 2: Data Balancing Configuration
+# ============================================================
+
+balancing:
+  # --- Focal Loss ---
+  focal_loss:
+    gamma: 2.0                # Focusing parameter (>0, thường 2)
+    alpha: null               # null = tự tính từ class weights; hoặc list [0.25, ...]
+    reduction: "mean"
+
+  # --- Weighted Random Sampler ---
+  sampler:
+    enabled: true
+    strategy: "inverse_frequency"  # inverse_frequency | sqrt_inverse | effective_num
+    # effective_num beta (chỉ dùng khi strategy = effective_num)
+    beta: 0.9999
+
+  # --- Augmentation (áp dụng mạnh hơn cho lớp thiểu số) ---
+  augmentation:
+    # Augmentation cơ bản (tất cả lớp)
+    basic:
+      horizontal_flip: true
+      vertical_flip: true
+      random_rotate_90: true
+      brightness_contrast:
+        brightness_limit: 0.2
+        contrast_limit: 0.2
+    
+    # Augmentation nâng cao (chỉ lớp thiểu số: MEL, BCC, AK)
+    advanced:
+      enabled: true
+      target_classes: ["MEL", "BCC", "AK"]
+      cutmix:
+        enabled: true
+        alpha: 1.0
+      elastic_transform:
+        enabled: true
+        alpha: 120
+        sigma: 6
+      grid_distortion:
+        enabled: true
+        num_steps: 5
+        distort_limit: 0.3
+      color_jitter:
+        hue_shift: 10
+        sat_shift: 20
+        val_shift: 20

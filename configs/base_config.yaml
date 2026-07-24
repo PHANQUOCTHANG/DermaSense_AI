@@ -1,0 +1,80 @@
+# ============================================================
+# DermaSense AI — Base Configuration
+# Dùng chung cho mọi giai đoạn
+# ============================================================
+
+project:
+  name: "DermaSense_AI"
+  version: "0.1.0"
+  description: "Multi-stage Dermatology Screening System"
+
+# --- Paths ---
+paths:
+  data_raw: "data/raw"
+  data_processed: "data/processed"
+  data_clinical: "data/clinical"
+  checkpoints: "models/checkpoints"
+  baselines: "models/baselines"
+  exported: "models/exported"
+  outputs: "outputs"
+  figures: "outputs/figures"
+  logs: "outputs/logs"
+  xai_heatmaps: "outputs/xai_heatmaps"
+
+# --- Kaggle Paths (khi chạy trên Kaggle Notebooks) ---
+kaggle:
+  input_dir: "/kaggle/input"
+  working_dir: "/kaggle/working"
+  isic_dataset: "/kaggle/input/isic-2019"  # Kaggle dataset slug: andrewmvd/isic-2019
+
+# --- Reproducibility ---
+seed: 42
+
+# --- Data Split ---
+data_split:
+  train: 0.70
+  val: 0.15
+  test: 0.15
+
+# --- Device (tự động detect) ---
+# Trên Kaggle: cuda (GPU T4 miễn phí)
+# Trên local: cpu (chỉ dùng để code & test)
+device: "auto"  # auto | cuda | cpu
+
+# --- Experiment Tracking ---
+wandb:
+  project: "DermaSense_AI"
+  entity: null  # Điền W&B username nếu cần
+  enabled: true
+
+# --- ISIC Dataset Labels ---
+labels:
+  # 7 lớp bệnh học ISIC
+  classes:
+    - "MEL"    # Melanoma
+    - "NV"     # Melanocytic nevus
+    - "BCC"    # Basal cell carcinoma
+    - "AK"     # Actinic keratosis
+    - "BKL"    # Benign keratosis
+    - "DF"     # Dermatofibroma
+    - "VASC"   # Vascular lesion
+  
+  # Nhãn nhị phân cho Stage A (Safety Screener)
+  # "cần chú ý" = melanoma + basal cell carcinoma + actinic keratosis
+  high_risk: ["MEL", "BCC", "AK"]
+  low_risk: ["NV", "BKL", "DF", "VASC"]
+
+# --- Risk Mapping (Stage B → 3 mức nguy cơ) ---
+risk_levels:
+  high:
+    label: "Cần khám ngay"
+    classes: ["MEL", "BCC"]
+    threshold: 0.7          # Xác suất cao → gửi bác sĩ
+  medium:
+    label: "Cần theo dõi"
+    classes: ["AK"]
+    threshold: 0.5
+  low:
+    label: "Lành tính"
+    classes: ["NV", "BKL", "DF", "VASC"]
+    threshold: 0.5
