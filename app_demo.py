@@ -4,18 +4,14 @@ import numpy as np
 import yaml
 import torch
 from pathlib import Path
-import importlib
-import src.models.vision_branch
-import src.models.fusion_net
-importlib.reload(src.models.vision_branch)
-importlib.reload(src.models.fusion_net)
+import tempfile
+import os
 
 from src.data.preprocessing import preprocess_single_image
 from src.data.augmentations import get_val_transforms
 from src.models.vision_branch import VisionBranch
 from src.models.fusion_net import MultimodalFusionNet
-import tempfile
-import os
+
 
 st.set_page_config(page_title="DermaSense AI - Demo", layout="wide")
 
