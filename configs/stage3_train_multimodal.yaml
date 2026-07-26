@@ -1,21 +1,20 @@
 # ============================================================
 # DermaSense AI — Stage 3: Train Multimodal Configuration
-# Huấn luyện mô hình Đa phương thức (Ảnh + Lâm sàng) - 7 Classes
+# Huấn luyện mô hình Đa phương thức (Ảnh + Lâm sàng) - 23 Classes
 # ============================================================
 
 model:
-  # Sử dụng bản M (Medium) vì nhiệm vụ 7-class khó hơn 2-class
   vision_name: "tf_efficientnetv2_m.in21k_ft_in1k"
-  num_classes: 7
-  clinical_in_features: 5
+  num_classes: 23
+  clinical_in_features: 7
   clinical_out_features: 64
   pretrained: true
 
 data:
-  batch_size: 16  # Giảm batch size vì EfficientNetV2-M tốn VRAM hơn
+  batch_size: 16
   num_workers: 4
   img_size: 384
-  clinical_csv_path: "data/clinical/metadata_encoded.csv"
+  clinical_csv_path: "data/raw/metadata.csv"
 
 training:
   # Chiến lược 2-Step Training
@@ -26,7 +25,7 @@ training:
     description: "Freeze Vision Branch, chỉ train Fusion Head"
     
   step2:
-    epochs: 45
+    epochs: 20
     lr: 0.00005
     weight_decay: 0.01
     description: "Unfreeze toàn bộ, Fine-tune nhẹ nhàng"

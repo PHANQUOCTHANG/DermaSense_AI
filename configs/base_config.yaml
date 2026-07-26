@@ -47,34 +47,97 @@ wandb:
   entity: null  # Điền W&B username nếu cần
   enabled: true
 
-# --- ISIC Dataset Labels ---
+# --- ISIC/DermNet Dataset Labels ---
 labels:
-  # 7 lớp bệnh học ISIC
+  # 23 lớp bệnh học DermNet
   classes:
-    - "MEL"    # Melanoma
-    - "NV"     # Melanocytic nevus
-    - "BCC"    # Basal cell carcinoma
-    - "AK"     # Actinic keratosis
-    - "BKL"    # Benign keratosis
-    - "DF"     # Dermatofibroma
-    - "VASC"   # Vascular lesion
+    - "Acne and Rosacea"
+    - "Actinic Keratosis and Skin Cancer"
+    - "Atopic Dermatitis"
+    - "Bullous Disease"
+    - "Cellulitis and Bacterial Infections"
+    - "Eczema"
+    - "Exanthems and Drug Eruptions"
+    - "Hair Loss"
+    - "Herpes and HPV"
+    - "Light Diseases and Pigmentation"
+    - "Lupus and Connective Tissue"
+    - "Melanoma and Nevi"
+    - "Nail Fungus"
+    - "Poison Ivy and Contact Dermatitis"
+    - "Psoriasis and Lichen Planus"
+    - "Scabies and Lyme"
+    - "Seborrheic Keratoses and Benign Tumors"
+    - "Systemic Diseases"
+    - "Tinea and Fungal Infections"
+    - "Urticaria Hives"
+    - "Vascular Tumors"
+    - "Vasculitis"
+    - "Warts and Molluscum"
   
   # Nhãn nhị phân cho Stage A (Safety Screener)
-  # "cần chú ý" = melanoma + basal cell carcinoma + actinic keratosis
-  high_risk: ["MEL", "BCC", "AK"]
-  low_risk: ["NV", "BKL", "DF", "VASC"]
+  # Nhóm rủi ro cao (Severe)
+  high_risk: 
+    - "Actinic Keratosis and Skin Cancer"
+    - "Bullous Disease"
+    - "Lupus and Connective Tissue"
+    - "Melanoma and Nevi"
+    - "Systemic Diseases"
+    - "Vasculitis"
+  # Nhóm rủi ro thấp (Mild/Moderate)
+  low_risk: 
+    - "Acne and Rosacea"
+    - "Atopic Dermatitis"
+    - "Cellulitis and Bacterial Infections"
+    - "Eczema"
+    - "Exanthems and Drug Eruptions"
+    - "Hair Loss"
+    - "Herpes and HPV"
+    - "Light Diseases and Pigmentation"
+    - "Nail Fungus"
+    - "Poison Ivy and Contact Dermatitis"
+    - "Psoriasis and Lichen Planus"
+    - "Scabies and Lyme"
+    - "Seborrheic Keratoses and Benign Tumors"
+    - "Tinea and Fungal Infections"
+    - "Urticaria Hives"
+    - "Vascular Tumors"
+    - "Warts and Molluscum"
 
 # --- Risk Mapping (Stage B → 3 mức nguy cơ) ---
 risk_levels:
   high:
     label: "Cần khám ngay"
-    classes: ["MEL", "BCC"]
-    threshold: 0.7          # Xác suất cao → gửi bác sĩ
+    classes: 
+      - "Actinic Keratosis and Skin Cancer"
+      - "Bullous Disease"
+      - "Lupus and Connective Tissue"
+      - "Melanoma and Nevi"
+      - "Systemic Diseases"
+      - "Vasculitis"
+    threshold: 0.6          # Xác suất cao → gửi bác sĩ
   medium:
-    label: "Cần theo dõi"
-    classes: ["AK"]
+    label: "Cần theo dõi / Điều trị y tế"
+    classes: 
+      - "Atopic Dermatitis"
+      - "Cellulitis and Bacterial Infections"
+      - "Eczema"
+      - "Exanthems and Drug Eruptions"
+      - "Herpes and HPV"
+      - "Poison Ivy and Contact Dermatitis"
+      - "Psoriasis and Lichen Planus"
+      - "Scabies and Lyme"
+      - "Vascular Tumors"
     threshold: 0.5
   low:
-    label: "Lành tính"
-    classes: ["NV", "BKL", "DF", "VASC"]
+    label: "Tự chăm sóc tại nhà"
+    classes: 
+      - "Acne and Rosacea"
+      - "Hair Loss"
+      - "Light Diseases and Pigmentation"
+      - "Nail Fungus"
+      - "Seborrheic Keratoses and Benign Tumors"
+      - "Tinea and Fungal Infections"
+      - "Urticaria Hives"
+      - "Warts and Molluscum"
     threshold: 0.5
