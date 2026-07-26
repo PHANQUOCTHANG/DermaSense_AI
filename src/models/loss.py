@@ -57,3 +57,15 @@ class BinaryFocalLoss(nn.Module):
             return loss.sum()
         else:
             return loss
+
+class MultiClassFocalLoss(nn.Module):
+    def __init__(self, gamma=2.0, weight=None):
+        super().__init__()
+        self.gamma = gamma
+        self.ce = nn.CrossEntropyLoss(weight=weight, reduction='none')
+        
+    def forward(self, inputs, targets):
+        ce_loss = self.ce(inputs, targets)
+        pt = torch.exp(-ce_loss)
+        focal_loss = ((1 - pt) ** self.gamma) * ce_loss
+        return focal_loss.mean()

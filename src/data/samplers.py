@@ -16,7 +16,11 @@ def get_weighted_sampler(dataset) -> WeightedRandomSampler:
         WeightedRandomSampler để nạp vào DataLoader.
     """
     # Lấy toàn bộ nhãn từ tập dữ liệu
-    labels = [sample[1] for sample in dataset.samples]
+    if hasattr(dataset, 'indices'):
+        # Nếu dataset là torch.utils.data.Subset
+        labels = [dataset.dataset.samples[i][1] for i in dataset.indices]
+    else:
+        labels = [sample[1] for sample in dataset.samples]
     
     # Đếm số lượng mẫu của mỗi lớp
     class_counts = {}
