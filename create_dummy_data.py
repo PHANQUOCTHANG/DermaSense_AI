@@ -9,17 +9,33 @@ def create_dummy_data():
     raw_img_dir = Path("data/raw/images")
     raw_img_dir.mkdir(parents=True, exist_ok=True)
     
-    classes = ["MEL", "NV", "BCC", "AK", "BKL", "DF", "VASC"]
+    classes = [
+        "Acne and Rosacea", "Actinic Keratosis and Skin Cancer", "Atopic Dermatitis", 
+        "Bullous Disease", "Cellulitis and Bacterial Infections", "Eczema", 
+        "Exanthems and Drug Eruptions", "Hair Loss", "Herpes and HPV", 
+        "Light Diseases and Pigmentation", "Lupus and Connective Tissue", 
+        "Melanoma and Nevi", "Nail Fungus", "Poison Ivy and Contact Dermatitis", 
+        "Psoriasis and Lichen Planus", "Scabies and Lyme", 
+        "Seborrheic Keratoses and Benign Tumors", "Systemic Diseases", 
+        "Tinea and Fungal Infections", "Urticaria Hives", "Vascular Tumors", 
+        "Vasculitis", "Warts and Molluscum"
+    ]
     anatom_sites = ["anterior torso", "head/neck", "lower extremity", "upper extremity", "posterior torso"]
     symptoms = ["itch", "bleeding", "pain", "none"]
+    skin_types = ["I", "II", "III", "IV", "V", "VI"]
+    family_history_opts = ["yes", "no"]
     
     metadata = []
     
     for i in range(50):
         img_id = f"ISIC_{i:07d}"
         
-        # Tạo ảnh giả (nhiễu ngẫu nhiên)
-        img = np.random.randint(0, 256, (400, 400, 3), dtype=np.uint8)
+        # Tạo ảnh giả với màu da trung bình BGR (120, 150, 200)
+        img = np.zeros((400, 400, 3), dtype=np.uint8)
+        img[:] = (120, 150, 200)  # BGR cho màu da
+        # Thêm nhiễu ngẫu nhiên nhẹ
+        noise = np.random.normal(0, 15, (400, 400, 3)).astype(np.uint8)
+        img = cv2.add(img, noise)
         
         # Thêm các vệt tối ngẫu nhiên giả làm lông trên một số ảnh
         if random.random() > 0.5:
@@ -38,6 +54,8 @@ def create_dummy_data():
         anatom_site = random.choice(anatom_sites)
         duration = random.randint(10, 365)
         symptom = random.choice(symptoms)
+        skin_type = random.choice(skin_types)
+        family_history = random.choice(family_history_opts)
         
         metadata.append({
             "image_id": img_id,
@@ -46,12 +64,14 @@ def create_dummy_data():
             "sex": sex,
             "anatom_site": anatom_site,
             "duration": duration,
-            "symptoms": symptom
+            "symptoms": symptom,
+            "skin_type": skin_type,
+            "family_history": family_history
         })
         
     df = pd.DataFrame(metadata)
     df.to_csv("data/raw/metadata.csv", index=False)
-    print("Đã tạo thành công dữ liệu giả: 50 ảnh và metadata.csv")
+    print("Đã tạo thành công dữ liệu giả: 50 ảnh và metadata.csv (23 lớp)")
 
 if __name__ == "__main__":
     create_dummy_data()

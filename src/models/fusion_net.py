@@ -15,8 +15,8 @@ class MultimodalFusionNet(nn.Module):
     def __init__(
         self, 
         vision_model_name: str = "tf_efficientnetv2_m.in21k_ft_in1k",
-        num_classes: int = 7,
-        clinical_in_features: int = 5,
+        num_classes: int = 23,
+        clinical_in_features: int = 7,
         clinical_out_features: int = 64,
         pretrained: bool = True
     ):
@@ -43,10 +43,14 @@ class MultimodalFusionNet(nn.Module):
         fusion_dim = vision_out_features + clinical_out_features
         
         self.fusion_head = nn.Sequential(
-            nn.Linear(fusion_dim, 256),
-            nn.BatchNorm1d(256),
+            nn.Linear(fusion_dim, 512),
+            nn.BatchNorm1d(512),
             nn.ReLU(),
             nn.Dropout(p=0.4),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU(),
+            nn.Dropout(p=0.3),
             nn.Linear(256, num_classes)
         )
         

@@ -8,10 +8,10 @@ class ClinicalBranch(nn.Module):
     thành một vector embedding dày đặc (dense representation).
     """
     
-    def __init__(self, in_features: int = 5, out_features: int = 64):
+    def __init__(self, in_features: int = 7, out_features: int = 64):
         """
         Args:
-            in_features: Số lượng đặc trưng đầu vào (mặc định 5: age, sex, site, duration, symptoms).
+            in_features: Số lượng đặc trưng đầu vào (mặc định 7: age, sex, site, duration, symptoms, skin_type, family_history).
             out_features: Kích thước của vector đầu ra.
         """
         super().__init__()

@@ -21,13 +21,13 @@ def compute_laplacian_variance(image: np.ndarray) -> float:
     return float(variance)
 
 
-def is_skin_image(image: np.ndarray, min_skin_ratio: float = 0.15) -> tuple:
+def is_skin_image(image: np.ndarray, min_skin_ratio: float = 0.05) -> tuple:
     """Kiểm tra xem ảnh đầu vào có phải là ảnh da hay không bằng phân tích không gian màu.
     Sử dụng kết hợp YCrCb và HSV để định vị pixel màu da người.
     
     Args:
         image: Ảnh BGR.
-        min_skin_ratio: Tỷ lệ phần trăm pixel da tối thiểu để được coi là ảnh da (0.15 = 15%).
+        min_skin_ratio: Tỷ lệ phần trăm pixel da tối thiểu để được coi là ảnh da (0.05 = 5%).
         
     Returns:
         (is_skin, skin_ratio): bool, float
