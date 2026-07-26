@@ -5,11 +5,12 @@ DermaSense AI — Augmentations Utility
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
-def get_train_transforms(config_aug: dict) -> A.Compose:
+def get_train_transforms(config_aug: dict, img_size: int = 384) -> A.Compose:
     """Tạo pipeline augmentation cho tập Train.
     
     Args:
         config_aug: Cấu hình augmentation từ base_config hoặc stage2_balancing.
+        img_size: Kích thước ảnh sau khi resize
         
     Returns:
         Albumentations Compose object.
@@ -17,7 +18,9 @@ def get_train_transforms(config_aug: dict) -> A.Compose:
     basic_cfg = config_aug.get("basic", {})
     advanced_cfg = config_aug.get("advanced", {})
     
-    transforms = []
+    transforms = [
+        A.Resize(img_size, img_size)
+    ]
     
     # 1. Augmentation cơ bản (áp dụng cho mọi ảnh)
     if basic_cfg.get("horizontal_flip", True):
@@ -67,14 +70,15 @@ def get_train_transforms(config_aug: dict) -> A.Compose:
     
     return A.Compose(transforms)
 
-def get_val_transforms() -> A.Compose:
+def get_val_transforms(img_size: int = 384) -> A.Compose:
     """Tạo pipeline augmentation cho tập Validation/Test.
-    (Chỉ bao gồm Normalize và chuyển thành Tensor).
+    (Bao gồm Resize, Normalize và chuyển thành Tensor).
     
     Returns:
         Albumentations Compose object.
     """
     return A.Compose([
+        A.Resize(img_size, img_size),
         A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ToTensorV2()
     ])
