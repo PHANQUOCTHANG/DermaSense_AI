@@ -96,9 +96,24 @@ def main():
     val_dataset.dataset.transforms = get_val_transforms()
     
     
-    # Dummy weight cho các classes để tránh lỗi nếu thư mục không đủ ảnh
+    # 2. Tính toán class weights thực tế để chống mất cân bằng
+    print("📊 Đang phân tích phân phối dữ liệu để tính Class Weights...")
     num_classes = stage3_config["model"]["num_classes"]
-    class_weights = torch.ones(num_classes).to(device)
+    
+    # train_dataset là kiểu Subset nên phải dùng train_dataset.indices để lấy mẫu gốc
+    labels = [full_dataset.samples[i][1] for i in train_dataset.indices]
+    class_counts = torch.bincount(torch.tensor(labels), minlength=num_classes)
+    total_samples = class_counts.sum().item()
+    
+    # Trọng số alpha = Total / (Num_Classes * Count)
+    class_weights = total_samples / (num_classes * class_counts.float())
+    # Giới hạn min max nếu dữ liệu quá lệch
+    class_weights = torch.clamp(class_weights, min=0.1, max=10.0)
+    class_weights[class_counts == 0] = 1.0  # Tránh chia cho 0
+    class_weights = class_weights.to(device)
+    
+    print("✅ Đã tính xong Class Weights!")
+    
     sampler = get_weighted_sampler(train_dataset)
     
     train_loader = DataLoader(

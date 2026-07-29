@@ -63,6 +63,21 @@ def get_train_transforms(config_aug: dict, img_size: int = 384) -> A.Compose:
                 )
             )
             
+        # Thêm CoarseDropout (Random Erasing) để mô hình học context tốt hơn
+        if advanced_cfg.get("coarse_dropout", True):
+            transforms.append(
+                A.CoarseDropout(
+                    max_holes=8, 
+                    max_height=32, 
+                    max_width=32, 
+                    min_holes=1, 
+                    min_height=8, 
+                    min_width=8, 
+                    fill_value=0, 
+                    p=0.5
+                )
+            )
+            
     # Normalize và chuyển thành Tensor (Luôn áp dụng cuối cùng)
     # ImageNet stats: mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
     transforms.append(A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)))

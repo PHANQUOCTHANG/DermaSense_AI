@@ -25,7 +25,7 @@ training:
     description: "Freeze Vision Branch, chỉ train Fusion Head"
     
   step2:
-    epochs: 20
+    epochs: 50
     lr: 0.00005
     weight_decay: 0.01
     description: "Unfreeze toàn bộ, Fine-tune nhẹ nhàng"
