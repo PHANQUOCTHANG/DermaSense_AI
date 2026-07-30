@@ -165,7 +165,13 @@ def main():
         clinical_in_features=stage3_config["model"]["clinical_in_features"],
         clinical_out_features=stage3_config["model"]["clinical_out_features"],
         pretrained=stage3_config["model"]["pretrained"]
-    ).to(device)
+    )
+    
+    if torch.cuda.device_count() > 1:
+        print(f"🚀 Tìm thấy {torch.cuda.device_count()} GPUs! Kích hoạt chế độ huấn luyện Multi-GPU (DataParallel)...")
+        model = nn.DataParallel(model)
+        
+    model = model.to(device)
     
     criterion = MultiClassFocalLoss(gamma=stage3_config["training"]["focal_loss_gamma"], weight=class_weights)
     
@@ -203,7 +209,10 @@ def main():
         print(stage3_config["training"]["step1"]["description"])
         print("="*50)
         
-        model.freeze_vision_branch()
+        if isinstance(model, nn.DataParallel):
+            model.module.freeze_vision_branch()
+        else:
+            model.freeze_vision_branch()
         optimizer1 = torch.optim.AdamW(
             filter(lambda p: p.requires_grad, model.parameters()), 
             lr=stage3_config["training"]["step1"]["lr"],
@@ -249,7 +258,10 @@ def main():
     print(stage3_config["training"]["step2"]["description"])
     print("="*50)
     
-    model.unfreeze_vision_branch()
+    if isinstance(model, nn.DataParallel):
+        model.module.unfreeze_vision_branch()
+    else:
+        model.unfreeze_vision_branch()
     optimizer2 = torch.optim.AdamW(
         model.parameters(), 
         lr=stage3_config["training"]["step2"]["lr"],
