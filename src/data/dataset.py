@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import cv2
+cv2.setNumThreads(0) # Ngăn chặn rò rỉ RAM khi dùng chung với PyTorch DataLoader
 import numpy as np
 import pandas as pd
 import torch

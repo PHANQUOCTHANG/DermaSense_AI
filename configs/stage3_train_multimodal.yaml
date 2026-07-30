@@ -12,7 +12,7 @@ model:
 
 data:
   batch_size: 16
-  num_workers: 4
+  num_workers: 2
   img_size: 384
   clinical_csv_path: "data/raw/metadata.csv"
 
