@@ -18,6 +18,24 @@ from src.models.fusion_net import MultimodalFusionNet
 from src.models.loss import MultiClassFocalLoss
 from src.utils.seed import set_seed, get_device
 
+def cutmix_data(x, y, alpha=1.0):
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+    batch_size = x.size()[0]
+    index = torch.randperm(batch_size).to(x.device)
+    y_a, y_b = y, y[index]
+    W, H = x.size()[2], x.size()[3]
+    cut_rat = np.sqrt(1. - lam)
+    cut_w, cut_h = int(W * cut_rat), int(H * cut_rat)
+    cx, cy = np.random.randint(W), np.random.randint(H)
+    bbx1, bby1 = np.clip(cx - cut_w // 2, 0, W), np.clip(cy - cut_h // 2, 0, H)
+    bbx2, bby2 = np.clip(cx + cut_w // 2, 0, W), np.clip(cy + cut_h // 2, 0, H)
+    x[:, :, bbx1:bbx2, bby1:bby2] = x[index, :, bbx1:bbx2, bby1:bby2]
+    lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (W * H))
+    return x, y_a, y_b, lam
+
 def train_epoch(model, dataloader, criterion, optimizer, device):
     model.train()
     running_loss = 0.0
@@ -28,9 +46,16 @@ def train_epoch(model, dataloader, criterion, optimizer, device):
         images, clinicals, labels = images.to(device), clinicals.to(device), labels.to(device)
         
         optimizer.zero_grad()
-        logits = model(images, clinicals)
-        loss = criterion(logits, labels)
         
+        # CutMix augmentation (50% probability)
+        if np.random.rand() < 0.5:
+            images, targets_a, targets_b, lam = cutmix_data(images, labels)
+            logits = model(images, clinicals)
+            loss = criterion(logits, targets_a) * lam + criterion(logits, targets_b) * (1. - lam)
+        else:
+            logits = model(images, clinicals)
+            loss = criterion(logits, labels)
+            
         loss.backward()
         optimizer.step()
         

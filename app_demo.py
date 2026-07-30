@@ -743,14 +743,27 @@ def realtime_video_callback(frame):
                 # Chuyển sang RGB và chạy qua model
                 crop_rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
                 val_transforms = get_val_transforms()
-                tensor_img = val_transforms(image=crop_rgb)["image"].unsqueeze(0).to(device)
+                # TTA: Test-Time Augmentation (3 variations)
+                # 1. Gốc
+                tensor_img1 = val_transforms(image=crop_rgb)["image"].unsqueeze(0)
+                # 2. Lật ngang
+                crop_flipped = cv2.flip(crop_rgb, 1)
+                tensor_img2 = val_transforms(image=crop_flipped)["image"].unsqueeze(0)
+                # 3. Tăng sáng nhẹ
+                crop_bright = cv2.convertScaleAbs(crop_rgb, alpha=1.1, beta=15)
+                tensor_img3 = val_transforms(image=crop_bright)["image"].unsqueeze(0)
                 
-                # Tạo clinical features mặc định (trung bình)
+                # Nạp cả 3 ảnh vào GPU cùng lúc
+                tensor_imgs = torch.cat([tensor_img1, tensor_img2, tensor_img3], dim=0).to(device)
+                
+                # Tạo clinical features mặc định và copy ra 3 bản
                 default_clinical = torch.tensor([[0.45, 0.5, 0.2, 0.08, 0.0, 0.4, 0.0]], dtype=torch.float32).to(device)
+                batch_clinical = default_clinical.repeat(3, 1)
                 
                 with torch.no_grad():
-                    logits = model3(tensor_img, default_clinical)
-                    probs = torch.softmax(logits, dim=1)[0].cpu()
+                    logits = model3(tensor_imgs, batch_clinical)
+                    # Tính softmax cho 3 bản, rồi lấy xác suất trung bình
+                    probs = torch.softmax(logits, dim=1).mean(dim=0).cpu()
                 
                 top3_prob, top3_idx = torch.topk(probs, 3)
                 
