@@ -168,12 +168,13 @@ class DermDataset(Dataset):
         img_path_str, label = self.samples[idx]
         img_path = Path(img_path_str)
         
-        # Đọc ảnh bằng OpenCV
-        image = cv2.imread(img_path_str)
-        if image is None:
+        # Đọc ảnh bằng PIL để chống rò rỉ bộ nhớ C++ của OpenCV
+        try:
+            from PIL import Image
+            image = Image.open(img_path_str).convert('RGB')
+            image = np.array(image)
+        except Exception as e:
             raise ValueError(f"Khong the doc anh: {img_path_str}")
-            
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
         # Áp dụng Albumentations
         if self.transforms is not None:
