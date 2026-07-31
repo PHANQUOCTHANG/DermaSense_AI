@@ -146,7 +146,7 @@ def main():
         batch_size=stage3_config["data"]["batch_size"],
         sampler=sampler,
         num_workers=stage3_config["data"]["num_workers"],
-        pin_memory=True
+        pin_memory=False
     )
     
     val_loader = DataLoader(
@@ -154,7 +154,7 @@ def main():
         batch_size=stage3_config["data"]["batch_size"],
         shuffle=False,
         num_workers=stage3_config["data"]["num_workers"],
-        pin_memory=True
+        pin_memory=False
     )
     
     # 3. Khởi tạo Mô hình
