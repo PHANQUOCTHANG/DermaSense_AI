@@ -1,6 +1,7 @@
 """
 Pipeline Huấn luyện Stage 3: Mô hình Đa phương thức (Multimodal Fusion)
 Áp dụng chiến lược huấn luyện 2 bước (2-Step Training)
+Có hỗ trợ AMP (Mixed Precision) để tăng tốc gấp đôi trên GPU T4.
 """
 
 import yaml
@@ -9,6 +10,8 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from pathlib import Path
 import time
+import sys
+import gc
 import numpy as np
 
 from src.data.dataset import DermDataset
@@ -36,28 +39,37 @@ def cutmix_data(x, y, alpha=1.0):
     lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (W * H))
     return x, y_a, y_b, lam
 
-def train_epoch(model, dataloader, criterion, optimizer, device):
+def train_epoch(model, dataloader, criterion, optimizer, device, scaler=None):
     model.train()
     running_loss = 0.0
     correct = 0
     total = 0
+    use_amp = scaler is not None
     
     for images, clinicals, labels in dataloader:
         images, clinicals, labels = images.to(device), clinicals.to(device), labels.to(device)
         
         optimizer.zero_grad()
         
-        # CutMix augmentation (50% probability)
-        if np.random.rand() < 0.5:
-            images, targets_a, targets_b, lam = cutmix_data(images, labels)
-            logits = model(images, clinicals)
-            loss = criterion(logits, targets_a) * lam + criterion(logits, targets_b) * (1. - lam)
+        # AMP: Chạy forward pass ở chế độ float16 để tăng tốc
+        with torch.amp.autocast('cuda', enabled=use_amp):
+            # CutMix augmentation (50% probability)
+            if np.random.rand() < 0.5:
+                images, targets_a, targets_b, lam = cutmix_data(images, labels)
+                logits = model(images, clinicals)
+                loss = criterion(logits, targets_a) * lam + criterion(logits, targets_b) * (1. - lam)
+            else:
+                logits = model(images, clinicals)
+                loss = criterion(logits, labels)
+        
+        # AMP: Backward pass với GradScaler
+        if use_amp:
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
         else:
-            logits = model(images, clinicals)
-            loss = criterion(logits, labels)
-            
-        loss.backward()
-        optimizer.step()
+            loss.backward()
+            optimizer.step()
         
         running_loss += loss.item() * images.size(0)
         
@@ -67,7 +79,7 @@ def train_epoch(model, dataloader, criterion, optimizer, device):
         
     return running_loss / total, correct / total
 
-def val_epoch(model, dataloader, criterion, device):
+def val_epoch(model, dataloader, criterion, device, use_amp=False):
     model.eval()
     running_loss = 0.0
     correct = 0
@@ -77,8 +89,9 @@ def val_epoch(model, dataloader, criterion, device):
         for images, clinicals, labels in dataloader:
             images, clinicals, labels = images.to(device), clinicals.to(device), labels.to(device)
             
-            logits = model(images, clinicals)
-            loss = criterion(logits, labels)
+            with torch.amp.autocast('cuda', enabled=use_amp):
+                logits = model(images, clinicals)
+                loss = criterion(logits, labels)
             
             running_loss += loss.item() * images.size(0)
             
@@ -199,6 +212,15 @@ def main():
         print("ℹ️ Không tìm thấy checkpoint cũ. Bắt đầu huấn luyện từ đầu.")
     
     # ============================================================
+    # KÍCH HOẠT AMP (Mixed Precision) - Tăng tốc gấp đôi trên GPU T4
+    # ============================================================
+    use_amp = device.type == 'cuda'
+    scaler = torch.amp.GradScaler('cuda', enabled=use_amp) if use_amp else None
+    if use_amp:
+        print("⚡ AMP (Mixed Precision) đã được kích hoạt! Tốc độ tăng gấp 1.5-2x.")
+    sys.stdout.flush()
+    
+    # ============================================================
     # STEP 1: FREEZE VISION BACKBONE
     # ============================================================
     step1_epochs = stage3_config["training"]["step1"]["epochs"]
@@ -229,11 +251,12 @@ def main():
         
         epoch_start = start_epoch if start_step == 1 else 0
         for epoch in range(epoch_start, step1_epochs):
-            train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer1, device)
-            val_loss, val_acc = val_epoch(model, val_loader, criterion, device)
+            train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer1, device, scaler)
+            val_loss, val_acc = val_epoch(model, val_loader, criterion, device, use_amp)
             print(f"Step 1 - Epoch {epoch+1}/{step1_epochs} | "
                   f"Train Loss: {train_loss:.4f} Acc: {train_acc:.4f} | "
                   f"Val Loss: {val_loss:.4f} Acc: {val_acc:.4f}")
+            sys.stdout.flush()
             
             # Lưu checkpoint sau MỖI epoch (chống mất dữ liệu)
             if val_acc > best_val_acc:
@@ -246,6 +269,11 @@ def main():
                 'best_val_acc': best_val_acc,
                 'val_acc': val_acc
             }, checkpoint_dir / "last_checkpoint.pt")
+            
+            # Dọn rác RAM sau mỗi epoch
+            gc.collect()
+            if device.type == 'cuda':
+                torch.cuda.empty_cache()
         
         # Reset start_epoch cho Step 2
         start_epoch = 0
@@ -289,8 +317,8 @@ def main():
     for epoch in range(epoch_start, step2_epochs):
         start_time = time.time()
         
-        train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer2, device)
-        val_loss, val_acc = val_epoch(model, val_loader, criterion, device)
+        train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer2, device, scaler)
+        val_loss, val_acc = val_epoch(model, val_loader, criterion, device, use_amp)
         
         scheduler.step()
         epoch_time = time.time() - start_time
@@ -298,6 +326,7 @@ def main():
         print(f"Step 2 - Epoch {epoch+1}/{step2_epochs} [{epoch_time:.1f}s] | "
               f"Train Loss: {train_loss:.4f} Acc: {train_acc:.4f} | "
               f"Val Loss: {val_loss:.4f} Acc: {val_acc:.4f}")
+        sys.stdout.flush()
               
         # Lưu checkpoint sau MỖI epoch (chống mất dữ liệu)
         torch.save({
@@ -321,16 +350,23 @@ def main():
                 'optimizer_state_dict': optimizer2.state_dict(),
                 'val_acc': best_val_acc
             }, checkpoint_dir / "best_model.pt")
+            sys.stdout.flush()
         else:
             patience_counter += 1
             if patience_counter >= patience_limit:
                 print(f"⚠️ Early stopping kích hoạt tại Epoch {epoch+1}")
                 break
+        
+        # Dọn rác RAM sau mỗi epoch
+        gc.collect()
+        if device.type == 'cuda':
+            torch.cuda.empty_cache()
                 
     print("\n✅ Huấn luyện Stage 3 hoàn tất!")
     print(f"🏆 Best Validation Accuracy: {best_val_acc:.4f}")
     print(f"💾 Best model lưu tại: {checkpoint_dir / 'best_model.pt'}")
     print(f"💾 Last checkpoint lưu tại: {checkpoint_dir / 'last_checkpoint.pt'}")
+    sys.stdout.flush()
 
 if __name__ == "__main__":
     # Handle multiprocessing on Windows

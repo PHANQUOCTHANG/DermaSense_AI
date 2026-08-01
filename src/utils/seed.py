@@ -25,7 +25,7 @@ def set_seed(seed: int = 42) -> None:
 
     # Đảm bảo deterministic trên CUDA
     torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.benchmark = True
 
 
 def get_device(preference: str = "auto") -> torch.device:
