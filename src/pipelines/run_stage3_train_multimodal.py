@@ -260,7 +260,15 @@ def main():
             
             # Lưu checkpoint sau MỖI epoch (chống mất dữ liệu)
             if val_acc > best_val_acc:
+                print(f"  👉 Val Acc cải thiện lên {val_acc:.4f}. Lưu best_model!")
                 best_val_acc = val_acc
+                torch.save({
+                    'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer1.state_dict(),
+                    'val_acc': best_val_acc
+                }, checkpoint_dir / "best_model.pt")
+                
             torch.save({
                 'current_step': 1,
                 'current_epoch': epoch,
