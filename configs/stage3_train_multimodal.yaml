@@ -11,8 +11,8 @@ model:
   pretrained: true
 
 data:
-  batch_size: 32
-  num_workers: 2
+  batch_size: 16
+  num_workers: 0
   img_size: 384
   clinical_csv_path: "data/raw/metadata.csv"
 
