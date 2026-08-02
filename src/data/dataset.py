@@ -168,13 +168,13 @@ class DermDataset(Dataset):
         img_path_str, label = self.samples[idx]
         img_path = Path(img_path_str)
         
-        # Đọc ảnh bằng PIL để chống rò rỉ bộ nhớ, bắt buộc dùng 'with' để đóng file
-        try:
-            from PIL import Image
-            with Image.open(img_path_str) as img:
-                image = np.array(img.convert('RGB'))
-        except Exception as e:
-            raise ValueError(f"Khong the doc anh: {img_path_str}")
+        # Dùng OpenCV đọc ảnh vì nó nhanh hơn PIL cực nhiều trên Kaggle
+        # Khi num_workers = 0, OpenCV hoàn toàn an toàn không bị rò rỉ RAM
+        import cv2
+        image = cv2.imread(img_path_str)
+        if image is None:
+            raise ValueError(f"Khong the doc anh (bi loi hoac xoa): {img_path_str}")
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
         # Áp dụng Albumentations
         if self.transforms is not None:
