@@ -168,11 +168,11 @@ class DermDataset(Dataset):
         img_path_str, label = self.samples[idx]
         img_path = Path(img_path_str)
         
-        # Đọc ảnh bằng PIL để chống rò rỉ bộ nhớ C++ của OpenCV
+        # Đọc ảnh bằng PIL để chống rò rỉ bộ nhớ, bắt buộc dùng 'with' để đóng file
         try:
             from PIL import Image
-            image = Image.open(img_path_str).convert('RGB')
-            image = np.array(image)
+            with Image.open(img_path_str) as img:
+                image = np.array(img.convert('RGB'))
         except Exception as e:
             raise ValueError(f"Khong the doc anh: {img_path_str}")
         
