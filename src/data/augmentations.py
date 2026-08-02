@@ -67,13 +67,10 @@ def get_train_transforms(config_aug: dict, img_size: int = 384) -> A.Compose:
         if advanced_cfg.get("coarse_dropout", True):
             transforms.append(
                 A.CoarseDropout(
-                    max_holes=8, 
-                    max_height=32, 
-                    max_width=32, 
-                    min_holes=1, 
-                    min_height=8, 
-                    min_width=8, 
-                    fill_value=0, 
+                    num_holes_range=(1, 8),
+                    hole_height_range=(8, 32),
+                    hole_width_range=(8, 32),
+                    fill=0,
                     p=0.5
                 )
             )

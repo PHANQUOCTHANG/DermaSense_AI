@@ -21,7 +21,7 @@ preprocessing:
     method: "gray_world"      # gray_world | shades_of_gray
 
   # --- Skin Detection ---
-  skin_classifier:
+  skin_detection:
     enabled: true
     model: "mobilenetv3_small"
     confidence_threshold: 0.8

@@ -150,7 +150,7 @@ def preprocess_single_image(image_path: str, config: dict) -> tuple:
     """
     image = cv2.imread(image_path)
     if image is None:
-        return None, False
+        return None, False, False
         
     # 1. Skin Detection (Kiểm tra xem có phải ảnh da không)
     skin_cfg = config.get("skin_detection", {})

@@ -116,30 +116,43 @@ def main():
     # 2. Chuẩn bị Dữ liệu
     print("⏳ Đang chuẩn bị dữ liệu...")
     
-    # Load toàn bộ dữ liệu từ raw/images vì chưa chạy qua Stage 1 để tiết kiệm thời gian Demo
-    full_dataset = DermDataset(
+    img_size = stage3_config["data"].get("img_size", 384)
+    
+    # Tạo 2 dataset RIÊNG BIỆT với transforms khác nhau
+    # để tránh side-effect khi train/val dùng chung 1 instance
+    train_dataset_full = DermDataset(
         img_dir='data/raw/images',
         is_binary=False,
-        transforms=get_train_transforms(stage3_config.get("augmentations", {})),
+        transforms=get_train_transforms(stage3_config.get("augmentations", {}), img_size=img_size),
         use_clinical=True,
         clinical_csv=stage3_config["data"]["clinical_csv_path"]
     )
     
-    # Tự động chia 80% train, 20% val
-    train_size = int(0.8 * len(full_dataset))
-    val_size = len(full_dataset) - train_size
-    train_dataset, val_dataset = torch.utils.data.random_split(full_dataset, [train_size, val_size])
+    val_dataset_full = DermDataset(
+        img_dir='data/raw/images',
+        is_binary=False,
+        transforms=get_val_transforms(img_size=img_size),
+        use_clinical=True,
+        clinical_csv=stage3_config["data"]["clinical_csv_path"]
+    )
     
-    # Chỉnh sửa transforms cho val_dataset
-    val_dataset.dataset.transforms = get_val_transforms()
+    # Tạo bộ chỉ số (indices) chia 80/20 một lần duy nhất
+    total_len = len(train_dataset_full)
+    indices = torch.randperm(total_len, generator=torch.Generator().manual_seed(base_config["seed"])).tolist()
+    train_size = int(0.8 * total_len)
+    train_indices = indices[:train_size]
+    val_indices = indices[train_size:]
     
+    train_dataset = torch.utils.data.Subset(train_dataset_full, train_indices)
+    val_dataset = torch.utils.data.Subset(val_dataset_full, val_indices)
+    
+    print(f"  Train: {len(train_dataset)} | Val: {len(val_dataset)}")
     
     # 2. Tính toán class weights thực tế để chống mất cân bằng
     print("📊 Đang phân tích phân phối dữ liệu để tính Class Weights...")
     num_classes = stage3_config["model"]["num_classes"]
     
-    # train_dataset là kiểu Subset nên phải dùng train_dataset.indices để lấy mẫu gốc
-    labels = [full_dataset.samples[i][1] for i in train_dataset.indices]
+    labels = [train_dataset_full.samples[i][1] for i in train_indices]
     class_counts = torch.bincount(torch.tensor(labels), minlength=num_classes)
     total_samples = class_counts.sum().item()
     
@@ -154,20 +167,26 @@ def main():
     
     sampler = get_weighted_sampler(train_dataset)
     
+    batch_size = stage3_config["data"]["batch_size"]
+    num_workers = stage3_config["data"]["num_workers"]
+    use_pin_memory = num_workers > 0
+    
     train_loader = DataLoader(
         train_dataset, 
-        batch_size=stage3_config["data"]["batch_size"],
+        batch_size=batch_size,
         sampler=sampler,
-        num_workers=stage3_config["data"]["num_workers"],
-        pin_memory=False
+        num_workers=num_workers,
+        pin_memory=use_pin_memory,
+        persistent_workers=num_workers > 0
     )
     
     val_loader = DataLoader(
         val_dataset,
-        batch_size=stage3_config["data"]["batch_size"],
+        batch_size=batch_size,
         shuffle=False,
-        num_workers=stage3_config["data"]["num_workers"],
-        pin_memory=False
+        num_workers=num_workers,
+        pin_memory=use_pin_memory,
+        persistent_workers=num_workers > 0
     )
     
     # 3. Khởi tạo Mô hình
