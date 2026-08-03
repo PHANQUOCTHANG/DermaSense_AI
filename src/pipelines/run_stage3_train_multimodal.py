@@ -13,6 +13,7 @@ import time
 import sys
 import gc
 import numpy as np
+from tqdm import tqdm
 
 from src.data.dataset import DermDataset
 from src.data.augmentations import get_train_transforms, get_val_transforms
@@ -46,7 +47,8 @@ def train_epoch(model, dataloader, criterion, optimizer, device, scaler=None):
     total = 0
     use_amp = scaler is not None
     
-    for images, clinicals, labels in dataloader:
+    pbar = tqdm(dataloader, desc="Training", leave=False, file=sys.stdout)
+    for images, clinicals, labels in pbar:
         images, clinicals, labels = images.to(device), clinicals.to(device), labels.to(device)
         
         optimizer.zero_grad()
@@ -77,6 +79,8 @@ def train_epoch(model, dataloader, criterion, optimizer, device, scaler=None):
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
         
+        pbar.set_postfix({'loss': loss.item(), 'acc': correct/total})
+        
     return running_loss / total, correct / total
 
 def val_epoch(model, dataloader, criterion, device, use_amp=False):
@@ -86,7 +90,8 @@ def val_epoch(model, dataloader, criterion, device, use_amp=False):
     total = 0
     
     with torch.no_grad():
-        for images, clinicals, labels in dataloader:
+        pbar = tqdm(dataloader, desc="Validation", leave=False, file=sys.stdout)
+        for images, clinicals, labels in pbar:
             images, clinicals, labels = images.to(device), clinicals.to(device), labels.to(device)
             
             with torch.amp.autocast('cuda', enabled=use_amp):
@@ -98,6 +103,8 @@ def val_epoch(model, dataloader, criterion, device, use_amp=False):
             _, predicted = torch.max(logits, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+            
+            pbar.set_postfix({'loss': loss.item(), 'acc': correct/total})
             
     return running_loss / total, correct / total
 
