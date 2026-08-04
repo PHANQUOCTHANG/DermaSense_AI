@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DermaSense AI - Intelligent Skin Screening</title>
+    <meta name="description" content="Hệ thống chẩn đoán da liễu AI đa phương thức: Kết hợp hình ảnh và dữ liệu lâm sàng.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+<div class="split-layout">
+
+    <!-- ====================== LEFT PANEL ====================== -->
+    <section class="panel panel-left">
+        <header class="header">
+            <div class="logo">
+                <i class="ph-fill ph-dna"></i>
+                <span>DermaSense AI</span>
+            </div>
+            <p class="subtitle">Hệ thống chẩn đoán đa phương thức thông minh</p>
+        </header>
+
+        <!-- Mode Tabs -->
+        <div class="mode-tabs">
+            <button class="mode-tab active" id="tabUpload" onclick="switchMode('upload')">
+                <i class="ph-bold ph-upload-simple"></i> Tải ảnh lên
+            </button>
+            <button class="mode-tab" id="tabCamera" onclick="switchMode('camera')">
+                <i class="ph-bold ph-video-camera"></i> Webcam Trực tiếp
+            </button>
+        </div>
+
+        <form id="diagnosisForm" class="input-form">
+
+            <!-- === UPLOAD MODE === -->
+            <div id="uploadMode">
+                <div class="form-group">
+                    <label>Hình ảnh tổn thương da</label>
+                    <div class="upload-zone" id="uploadZone">
+                        <input type="file" id="imageInput" name="image" accept="image/*" hidden>
+                        <div class="upload-content" id="uploadContent">
+                            <i class="ph ph-camera-plus upload-icon"></i>
+                            <p>Kéo thả ảnh vào đây hoặc <span>click để chọn</span></p>
+                        </div>
+                        <img id="imagePreview" class="image-preview hidden" src="" alt="Preview">
+                        <button type="button" id="removeImageBtn" class="remove-btn hidden">
+                            <i class="ph-fill ph-x-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- === WEBCAM MODE === -->
+            <div id="cameraMode" class="hidden">
+                <div class="form-group">
+                    <label>Camera Trực tiếp</label>
+                    <div class="webcam-container">
+                        <video id="webcamVideo" autoplay playsinline muted></video>
+                        <canvas id="webcamCanvas" hidden></canvas>
+                        <div class="webcam-overlay" id="webcamOverlay">
+                            <i class="ph-bold ph-video-camera-slash"></i>
+                            <p>Nhấn "Bật Camera" để bắt đầu</p>
+                        </div>
+                        <div class="webcam-badge hidden" id="realtimeBadge">
+                            <span class="pulse-dot"></span> Đang phân tích...
+                        </div>
+                    </div>
+                    <div class="webcam-controls">
+                        <button type="button" id="startCameraBtn" class="ctrl-btn ctrl-start" onclick="startCamera()">
+                            <i class="ph-bold ph-play"></i> Bật Camera
+                        </button>
+                        <button type="button" id="stopCameraBtn" class="ctrl-btn ctrl-stop hidden" onclick="stopCamera()">
+                            <i class="ph-bold ph-stop"></i> Tắt Camera
+                        </button>
+                        <button type="button" id="captureBtn" class="ctrl-btn ctrl-capture hidden" onclick="captureAndAnalyze()">
+                            <i class="ph-bold ph-camera"></i> Chụp & Phân Tích
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- === CLINICAL DATA === -->
+            <div class="clinical-data-section">
+                <h3><i class="ph-fill ph-note-pencil"></i> Thông tin lâm sàng</h3>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="age">Tuổi: <strong id="ageValue">45</strong></label>
+                        <input type="range" id="age" name="age" min="0" max="100" value="45" class="slider">
+                    </div>
+                    <div class="form-group">
+                        <label>Giới tính</label>
+                        <div class="toggle-group">
+                            <input type="radio" id="sex_male" name="sex" value="male" checked hidden>
+                            <label for="sex_male" class="toggle-btn">Nam</label>
+                            <input type="radio" id="sex_female" name="sex" value="female" hidden>
+                            <label for="sex_female" class="toggle-btn">Nữ</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="duration">Thời gian (ngày)</label>
+                        <input type="number" id="duration" name="duration" min="1" value="30" class="num-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="anatom_site">Vị trí</label>
+                        <input type="text" id="anatom_site" name="anatom_site" list="site_list" class="select-input" placeholder="Chọn hoặc nhập..." value="Đầu / Cổ">
+                        <datalist id="site_list">
+                            <option value="Đầu / Cổ"></option>
+                            <option value="Ngực / Bụng"></option>
+                            <option value="Lưng"></option>
+                            <option value="Tay"></option>
+                            <option value="Chân"></option>
+                            <option value="Lòng bàn tay / Chân"></option>
+                        </datalist>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="symptoms">Triệu chứng</label>
+                        <input type="text" id="symptoms" name="symptoms" list="symptom_list" class="select-input" placeholder="Chọn hoặc nhập..." value="Không có">
+                        <datalist id="symptom_list">
+                            <option value="Không có"></option>
+                            <option value="Ngứa"></option>
+                            <option value="Đau rát"></option>
+                            <option value="Chảy máu / Rỉ dịch"></option>
+                        </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label>Tiền sử gia đình</label>
+                        <div class="toggle-group">
+                            <input type="radio" id="fh_no" name="family_history" value="no" checked hidden>
+                            <label for="fh_no" class="toggle-btn">Không</label>
+                            <input type="radio" id="fh_yes" name="family_history" value="yes" hidden>
+                            <label for="fh_yes" class="toggle-btn">Có</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Loại da (Fitzpatrick Scale)</label>
+                    <div class="skin-type-selector">
+                        <input type="radio" name="skin_type" id="skin_I" value="I" hidden>
+                        <label for="skin_I" class="skin-swatch type-1" data-tooltip="Trắng bệch"></label>
+                        <input type="radio" name="skin_type" id="skin_II" value="II" hidden>
+                        <label for="skin_II" class="skin-swatch type-2" data-tooltip="Trắng sáng"></label>
+                        <input type="radio" name="skin_type" id="skin_III" value="III" checked hidden>
+                        <label for="skin_III" class="skin-swatch type-3" data-tooltip="Vàng / Bánh mật"></label>
+                        <input type="radio" name="skin_type" id="skin_IV" value="IV" hidden>
+                        <label for="skin_IV" class="skin-swatch type-4" data-tooltip="Nâu nhạt"></label>
+                        <input type="radio" name="skin_type" id="skin_V" value="V" hidden>
+                        <label for="skin_V" class="skin-swatch type-5" data-tooltip="Nâu đậm"></label>
+                        <input type="radio" name="skin_type" id="skin_VI" value="VI" hidden>
+                        <label for="skin_VI" class="skin-swatch type-6" data-tooltip="Đen"></label>
+                    </div>
+                    <div class="skin-type-labels">
+                        <span>I</span><span>II</span><span>III</span><span>IV</span><span>V</span><span>VI</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden field for base64 image (webcam) -->
+            <input type="hidden" id="image_b64" name="image_b64" value="">
+
+            <button type="submit" id="analyzeBtn" class="analyze-btn" disabled>
+                <i class="ph-bold ph-magic-wand"></i> Phân Tích Bằng AI
+            </button>
+        </form>
+
+        <footer class="panel-footer">
+            <i class="ph-fill ph-warning-circle"></i>
+            Chỉ mang tính tham khảo. Không thay thế chẩn đoán y khoa chuyên nghiệp.
+        </footer>
+    </section>
+
+
+    <!-- ====================== RIGHT PANEL ====================== -->
+    <section class="panel panel-right" id="resultPanel">
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <i class="ph-duotone ph-microscope"></i>
+            <h2>Chờ dữ liệu phân tích</h2>
+            <p>Tải ảnh lên hoặc bật Webcam, nhập thông tin lâm sàng rồi nhấn <strong>Phân Tích Bằng AI</strong>.</p>
+            <div class="stats-bar">
+                <div class="stat-item"><strong>23</strong><span>Nhóm bệnh</span></div>
+                <div class="stat-item"><strong>3</strong><span>Tập dữ liệu</span></div>
+                <div class="stat-item"><strong>40k+</strong><span>Ảnh huấn luyện</span></div>
+                <div class="stat-item"><strong>XAI</strong><span>Grad-CAM</span></div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-state hidden" id="loadingState">
+            <div class="spinner"></div>
+            <h2>AI đang phân tích...</h2>
+            <p>EfficientNetV2-M + Clinical MLP đang xử lý dữ liệu của bạn.</p>
+        </div>
+
+        <!-- Result State -->
+        <div class="result-content hidden" id="resultContent">
+
+            <!-- 1. Diagnosis Header -->
+            <div class="result-header">
+                <div class="diagnosis-info">
+                    <h4 class="label">KẾT QUẢ CHẨN ĐOÁN AI</h4>
+                    <h1 id="primaryDiagnosis" class="diagnosis-name"></h1>
+                    <div id="riskBadge" class="risk-badge"></div>
+                </div>
+                <div class="confidence-circle">
+                    <svg viewBox="0 0 36 36" class="circular-chart">
+                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        <path class="circle" id="confidenceCircle" stroke-dasharray="0, 100"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        <text x="18" y="20.35" class="percentage" id="confidenceText">0%</text>
+                    </svg>
+                    <p class="conf-label">Độ tin cậy</p>
+                </div>
+            </div>
+
+            <!-- 2. Grad-CAM Heatmap -->
+            <div class="visual-analysis">
+                <h4 class="label">XAI: BẢN ĐỒ NHIỆT GRAD-CAM</h4>
+                <p class="desc">Vùng màu đỏ/vàng là nơi AI tập trung sự chú ý cao nhất khi đưa ra quyết định.</p>
+                <div class="image-comparison">
+                    <div class="img-box">
+                        <img id="origImgResult" src="" alt="Anh goc">
+                        <span>Ảnh gốc</span>
+                    </div>
+                    <div class="img-box">
+                        <img id="processedImgResult" src="" alt="Anh da xu ly">
+                        <span>Ảnh tiền xử lý (AI)</span>
+                    </div>
+                    <div class="img-box">
+                        <img id="heatmapResult" src="" alt="Heatmap">
+                        <span>Bản đồ nhiệt (Grad-CAM)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Recommendation Box -->
+            <div class="recommendation-box" id="recommendationBox">
+                <h4 class="label">KHUYẾN NGHỊ & CÁCH XỬ LÝ</h4>
+                <div class="advice-body">
+                    <div class="advice-item">
+                        <i class="ph-fill ph-first-aid-kit advice-icon"></i>
+                        <p id="adviceText"></p>
+                    </div>
+                    <div class="advice-item advice-doctor">
+                        <i class="ph-fill ph-stethoscope advice-icon"></i>
+                        <p id="seeDoctorText"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Top 5 Differential -->
+            <div class="differential-diagnosis">
+                <h4 class="label">CHẨN ĐOÁN PHÂN BIỆT — TOP 5</h4>
+                <div class="bar-chart" id="top5Chart"></div>
+            </div>
+
+        </div>
+    </section>
+
+</div>
+
+<script src="/static/js/script.js"></script>
+</body>
+</html>
