@@ -55,8 +55,8 @@ def train_epoch(model, dataloader, criterion, optimizer, device, scaler=None):
         
         # AMP: Chạy forward pass ở chế độ float16 để tăng tốc
         with torch.amp.autocast('cuda', enabled=use_amp):
-            # CutMix augmentation (50% probability)
-            if np.random.rand() < 0.5:
+            # CutMix augmentation (20% probability - giam tu 50% de giu chi tiet benh da)
+            if np.random.rand() < 0.2:
                 images, targets_a, targets_b, lam = cutmix_data(images, labels)
                 logits = model(images, clinicals)
                 loss = criterion(logits, targets_a) * lam + criterion(logits, targets_b) * (1. - lam)
@@ -166,7 +166,7 @@ def main():
     # Trọng số alpha = Total / (Num_Classes * Count)
     class_weights = total_samples / (num_classes * class_counts.float())
     # Giới hạn min max nếu dữ liệu quá lệch
-    class_weights = torch.clamp(class_weights, min=0.1, max=10.0)
+    class_weights = torch.clamp(class_weights, min=0.1, max=50.0)
     class_weights[class_counts == 0] = 1.0  # Tránh chia cho 0
     class_weights = class_weights.to(device)
     

@@ -9,8 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadContent  = document.getElementById('uploadContent');
     const imagePreview   = document.getElementById('imagePreview');
     const removeBtn      = document.getElementById('removeImageBtn');
-    const ageSlider      = document.getElementById('age');
-    const ageValue       = document.getElementById('ageValue');
     const form           = document.getElementById('diagnosisForm');
     const analyzeBtn     = document.getElementById('analyzeBtn');
     const image_b64Field = document.getElementById('image_b64');
@@ -22,11 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFile   = null;
     let currentMode    = 'upload';
     let webcamStream   = null;
-    // Lưu b64 của ảnh webcam để hiển thị ảnh gốc sau khi submit
     let lastWebcamB64  = '';
-
-    // ── Age Slider ──
-    ageSlider.addEventListener('input', e => { ageValue.textContent = e.target.value; });
 
     // ================================================================
     //  MODE SWITCHING
@@ -180,17 +174,11 @@ document.addEventListener('DOMContentLoaded', () => {
         showState('loading');
         analyzeBtn.disabled = true;
 
-        // Xây dựng FormData thủ công để kiểm soát chính xác
+        // Xây dựng FormData thủ công
         const formData = new FormData();
 
-        // Clinical data
-        formData.append('age',            document.getElementById('age').value);
-        formData.append('sex',            document.querySelector('input[name="sex"]:checked')?.value || 'male');
-        formData.append('anatom_site',    document.getElementById('anatom_site').value);
-        formData.append('duration',       document.getElementById('duration').value);
-        formData.append('symptoms',       document.getElementById('symptoms').value);
-        formData.append('skin_type',      document.querySelector('input[name="skin_type"]:checked')?.value || 'III');
-        formData.append('family_history', document.querySelector('input[name="family_history"]:checked')?.value || 'no');
+        // Clinical text (single textarea)
+        formData.append('clinical_text', document.getElementById('clinical_text').value);
 
         // Ảnh
         if (currentMode === 'upload') {

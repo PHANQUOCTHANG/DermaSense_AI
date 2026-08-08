@@ -202,8 +202,9 @@ class DermDataset(Dataset):
                 
                 clinical_features = torch.tensor([age, sex, anatom_site, duration, symptom, skin_type, family_history], dtype=torch.float32)
             else:
-                # Nếu thiếu metadata, trả về vector 0
-                clinical_features = torch.zeros(7, dtype=torch.float32)
+                # Neu thieu metadata, tra ve vector GIA TRI TRUNG BINH (thay vi 0)
+                # [age=0.45, sex=0.5, site=0.3, duration=0.08, symptom=0.15, skin=0.4, fh=0.1]
+                clinical_features = torch.tensor([0.45, 0.5, 0.3, 0.08, 0.15, 0.4, 0.1], dtype=torch.float32)
                 
             return image, clinical_features, label_tensor
 

@@ -59,10 +59,10 @@ class BinaryFocalLoss(nn.Module):
             return loss
 
 class MultiClassFocalLoss(nn.Module):
-    def __init__(self, gamma=2.0, weight=None):
+    def __init__(self, gamma=2.0, weight=None, label_smoothing=0.1):
         super().__init__()
         self.gamma = gamma
-        self.ce = nn.CrossEntropyLoss(weight=weight, reduction='none')
+        self.ce = nn.CrossEntropyLoss(weight=weight, reduction='none', label_smoothing=label_smoothing)
         
     def forward(self, inputs, targets):
         ce_loss = self.ce(inputs, targets)

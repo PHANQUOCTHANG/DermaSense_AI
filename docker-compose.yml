@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: dermasense_web
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    # If deploying on a server with GPU, uncomment the lines below to enable GPU for PyTorch inference:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]

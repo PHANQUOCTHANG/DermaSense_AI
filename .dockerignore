@@ -1,0 +1,35 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+README.md
+
+# Kaggle / Colab specific
+*.ipynb
+.ipynb_checkpoints/
+Train_on_Kaggle.ipynb
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local data / Logs (optional: you might want to keep some models, but usually ignore data)
+data/
+# keep models/checkpoints/stage_b/best_model.pt but ignore everything else in models?
+# Actually, since the app needs best_model.pt to run, do NOT ignore models/.
+# models/ 
+
+# Logs
+*.log
+logs/

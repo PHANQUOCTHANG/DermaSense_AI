@@ -84,83 +84,15 @@
             <!-- === CLINICAL DATA === -->
             <div class="clinical-data-section">
                 <h3><i class="ph-fill ph-note-pencil"></i> Thông tin lâm sàng</h3>
-
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="age">Tuổi: <strong id="ageValue">45</strong></label>
-                        <input type="range" id="age" name="age" min="0" max="100" value="45" class="slider">
-                    </div>
-                    <div class="form-group">
-                        <label>Giới tính</label>
-                        <div class="toggle-group">
-                            <input type="radio" id="sex_male" name="sex" value="male" checked hidden>
-                            <label for="sex_male" class="toggle-btn">Nam</label>
-                            <input type="radio" id="sex_female" name="sex" value="female" hidden>
-                            <label for="sex_female" class="toggle-btn">Nữ</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="duration">Thời gian (ngày)</label>
-                        <input type="number" id="duration" name="duration" min="1" value="30" class="num-input">
-                    </div>
-                    <div class="form-group">
-                        <label for="anatom_site">Vị trí</label>
-                        <input type="text" id="anatom_site" name="anatom_site" list="site_list" class="select-input" placeholder="Chọn hoặc nhập..." value="Đầu / Cổ">
-                        <datalist id="site_list">
-                            <option value="Đầu / Cổ"></option>
-                            <option value="Ngực / Bụng"></option>
-                            <option value="Lưng"></option>
-                            <option value="Tay"></option>
-                            <option value="Chân"></option>
-                            <option value="Lòng bàn tay / Chân"></option>
-                        </datalist>
-                    </div>
-                </div>
-
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="symptoms">Triệu chứng</label>
-                        <input type="text" id="symptoms" name="symptoms" list="symptom_list" class="select-input" placeholder="Chọn hoặc nhập..." value="Không có">
-                        <datalist id="symptom_list">
-                            <option value="Không có"></option>
-                            <option value="Ngứa"></option>
-                            <option value="Đau rát"></option>
-                            <option value="Chảy máu / Rỉ dịch"></option>
-                        </datalist>
-                    </div>
-                    <div class="form-group">
-                        <label>Tiền sử gia đình</label>
-                        <div class="toggle-group">
-                            <input type="radio" id="fh_no" name="family_history" value="no" checked hidden>
-                            <label for="fh_no" class="toggle-btn">Không</label>
-                            <input type="radio" id="fh_yes" name="family_history" value="yes" hidden>
-                            <label for="fh_yes" class="toggle-btn">Có</label>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="form-group">
-                    <label>Loại da (Fitzpatrick Scale)</label>
-                    <div class="skin-type-selector">
-                        <input type="radio" name="skin_type" id="skin_I" value="I" hidden>
-                        <label for="skin_I" class="skin-swatch type-1" data-tooltip="Trắng bệch"></label>
-                        <input type="radio" name="skin_type" id="skin_II" value="II" hidden>
-                        <label for="skin_II" class="skin-swatch type-2" data-tooltip="Trắng sáng"></label>
-                        <input type="radio" name="skin_type" id="skin_III" value="III" checked hidden>
-                        <label for="skin_III" class="skin-swatch type-3" data-tooltip="Vàng / Bánh mật"></label>
-                        <input type="radio" name="skin_type" id="skin_IV" value="IV" hidden>
-                        <label for="skin_IV" class="skin-swatch type-4" data-tooltip="Nâu nhạt"></label>
-                        <input type="radio" name="skin_type" id="skin_V" value="V" hidden>
-                        <label for="skin_V" class="skin-swatch type-5" data-tooltip="Nâu đậm"></label>
-                        <input type="radio" name="skin_type" id="skin_VI" value="VI" hidden>
-                        <label for="skin_VI" class="skin-swatch type-6" data-tooltip="Đen"></label>
-                    </div>
-                    <div class="skin-type-labels">
-                        <span>I</span><span>II</span><span>III</span><span>IV</span><span>V</span><span>VI</span>
-                    </div>
+                    <textarea
+                        id="clinical_text"
+                        name="clinical_text"
+                        class="clinical-textarea"
+                        rows="7"
+                        placeholder="Vui lòng mô tả thông tin bệnh nhân, ví dụ:&#10;&#10;• Tuổi: 35, Nữ&#10;• Vị trí: Mặt, hai bên má&#10;• Triệu chứng: Ngứa, đỏ rát, bong tróc&#10;• Thời gian xuất hiện: khoảng 2 tuần&#10;• Da: Sáng màu (Type II)&#10;• Tiền sử gia đình: Cha bị vảy nến&#10;• Ghi chú thêm: Đã bôi kem trị mụn nhưng không đỡ"
+                    ></textarea>
+                    <p class="textarea-hint"><i class="ph ph-info"></i> Mô tả càng chi tiết, kết quả chẩn đoán càng chính xác. Nếu để trống, hệ thống sẽ chỉ phân tích dựa trên hình ảnh.</p>
                 </div>
             </div>
 

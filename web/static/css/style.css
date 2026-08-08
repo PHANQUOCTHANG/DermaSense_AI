@@ -84,33 +84,11 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(
 .ctrl-capture { background: var(--primary-grad); color: white; }
 .ctrl-btn:hover { filter: brightness(1.15); }
 
-/* Inputs */
-.select-input, .num-input { width: 100%; padding: 10px 12px; border-radius: 8px; background: var(--bg-dark-2); border: 1px solid var(--border-dark); color: var(--text-dark); font-size: 13px; outline: none; font-family: 'Inter', sans-serif; transition: border-color 0.2s; }
-.select-input:focus, .num-input:focus { border-color: var(--primary); }
-.select-input option { background: var(--bg-dark-2); }
-
-/* Slider */
-.slider { -webkit-appearance: none; width: 100%; height: 5px; border-radius: 3px; background: var(--bg-dark-2); outline: none; margin-top: 8px; }
-.slider::-webkit-slider-thumb { -webkit-appearance: none; width: 17px; height: 17px; border-radius: 50%; background: var(--primary); cursor: pointer; box-shadow: 0 0 8px rgba(99,102,241,0.5); }
-
-/* Toggle */
-.toggle-group { display: flex; background: var(--bg-dark-2); border-radius: 8px; overflow: hidden; }
-.toggle-btn { flex: 1; text-align: center; padding: 10px; cursor: pointer; font-size: 13px; color: var(--text-dark-muted); transition: all 0.2s; }
-input[type="radio"]:checked + .toggle-btn { background: var(--primary-grad); color: white; font-weight: 600; }
-
-/* Fitzpatrick */
-.skin-type-selector { display: flex; gap: 8px; margin-top: 4px; }
-.skin-swatch { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.2s, border-color 0.2s; position: relative; }
-/* Tooltip */
-.skin-swatch::after { content: attr(data-tooltip); position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%) translateY(5px); background: var(--bg-light); color: var(--text-light); padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; opacity: 0; visibility: hidden; transition: all 0.2s; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; border: 1px solid var(--border-light); }
-.skin-swatch::before { content: ''; position: absolute; bottom: 115%; left: 50%; transform: translateX(-50%) translateY(5px); border: 5px solid transparent; border-top-color: var(--bg-light); opacity: 0; visibility: hidden; transition: all 0.2s; pointer-events: none; z-index: 11; }
-.skin-swatch:hover::after, .skin-swatch:hover::before { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-
-.type-1 { background: #F5DEB3; } .type-2 { background: #DEB887; } .type-3 { background: #C8A97E; }
-.type-4 { background: #A0785A; } .type-5 { background: #6B4226; } .type-6 { background: #3B1C0A; }
-input[type="radio"]:checked + .skin-swatch { transform: scale(1.25); border-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
-.skin-type-labels { display: flex; gap: 8px; margin-top: 4px; padding-left: 1px; }
-.skin-type-labels span { width: 30px; text-align: center; font-size: 10px; color: var(--text-dark-muted); }
+/* Clinical Textarea */
+.clinical-textarea { width: 100%; padding: 14px 16px; border-radius: 10px; background: var(--bg-dark-2); border: 1px solid var(--border-dark); color: var(--text-dark); font-size: 13px; font-family: 'Inter', sans-serif; outline: none; resize: vertical; min-height: 120px; line-height: 1.7; transition: border-color 0.3s, box-shadow 0.3s; }
+.clinical-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+.clinical-textarea::placeholder { color: var(--text-dark-muted); opacity: 0.7; line-height: 1.7; }
+.textarea-hint { font-size: 11px; color: var(--text-dark-muted); margin-top: 8px; display: flex; align-items: flex-start; gap: 5px; line-height: 1.5; }
 
 /* Section heading */
 .clinical-data-section h3 { font-size: 13px; font-weight: 600; color: var(--text-dark-muted); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }

@@ -17,3 +17,5 @@ streamlit
 plotly
 streamlit-webrtc
 av
+Flask
+gunicorn

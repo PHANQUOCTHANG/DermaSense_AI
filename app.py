@@ -259,46 +259,116 @@ def run_inference(img_bgr, form_data):
     transformed = val_transforms(image=img_rgb)
     img_tensor = transformed["image"].unsqueeze(0).to(device)
 
-    # Clinical features - Enhanced mapping for text inputs
-    site_map = {
-        "Đầu / Cổ": 0.0, "Ngực / Bụng": 0.2, "Lưng": 0.4, "Tay": 0.6, "Chân": 0.8, "Lòng bàn tay / Chân": 1.0,
-        "head/neck": 0.0, "anterior torso": 0.2, "posterior torso": 0.4, "upper extremity": 0.6, "lower extremity": 0.8, "palms/soles": 1.0
-    }
-    symp_map = {
-        "Không có": 0.0, "Ngứa": 0.3, "Đau rát": 0.6, "Chảy máu / Rỉ dịch": 1.0,
-        "none": 0.0, "itch": 0.3, "pain": 0.6, "bleeding": 1.0
-    }
-    skin_map = {"I": 0.0, "II": 0.2, "III": 0.4, "IV": 0.6, "V": 0.8, "VI": 1.0}
+    # ── Parse clinical text (free-form) ──
+    clinical_text = form_data.get("clinical_text", "").strip().lower()
 
-    # Custom text handling (fallback rules)
-    raw_site = form_data.get("anatom_site", "Ngực / Bụng").strip()
-    site_val = 0.2 # default
-    for k, v in site_map.items():
-        if k.lower() in raw_site.lower():
-            site_val = v
+    # --- Age ---
+    import re
+    age_val = 0.45  # default neutral
+    age_match = re.search(r'(?:tuổi|tuoi|age)[:\s]*(\d+)', clinical_text)
+    if not age_match:
+        age_match = re.search(r'(\d{1,2})\s*(?:tuổi|tuoi|t)', clinical_text)
+    if age_match:
+        age_val = min(int(age_match.group(1)), 100) / 100.0
+
+    # --- Sex ---
+    sex_val = 0.5  # neutral default
+    if any(w in clinical_text for w in ["nữ", "nu", "female", "gái", "phụ nữ"]):
+        sex_val = 0.0
+    elif any(w in clinical_text for w in ["nam", "male", "trai"]):
+        sex_val = 1.0
+
+    # --- Site ---
+    site_val = 0.5  # neutral default
+    site_keywords = {
+        0.0: ["đầu", "dau", "cổ", "co", "mặt", "mat", "trán", "tran", "má", "ma", "head", "neck", "face"],
+        0.2: ["ngực", "nguc", "bụng", "bung", "chest", "anterior", "torso"],
+        0.4: ["lưng", "lung", "back", "posterior"],
+        0.6: ["tay", "cánh tay", "canh tay", "vai", "arm", "upper extremity"],
+        0.8: ["chân", "chan", "đùi", "dui", "leg", "lower extremity", "bắp chân"],
+        1.0: ["lòng bàn tay", "long ban tay", "lòng bàn chân", "palm", "sole", "bàn tay", "ban tay", "bàn chân"],
+    }
+    for val, keywords in site_keywords.items():
+        if any(kw in clinical_text for kw in keywords):
+            site_val = val
             break
 
-    raw_symptom = form_data.get("symptoms", "Không có").strip()
-    symptom_val = 0.0 # default
-    for k, v in symp_map.items():
-        if k.lower() in raw_symptom.lower():
-            symptom_val = v
+    # --- Duration ---
+    duration_val = 30.0 / 365.0  # default ~1 month
+    dur_match = re.search(r'(\d+)\s*(?:tuần|tuan|week)', clinical_text)
+    if dur_match:
+        duration_val = int(dur_match.group(1)) * 7 / 365.0
+    else:
+        dur_match = re.search(r'(\d+)\s*(?:tháng|thang|month)', clinical_text)
+        if dur_match:
+            duration_val = int(dur_match.group(1)) * 30 / 365.0
+        else:
+            dur_match = re.search(r'(\d+)\s*(?:ngày|ngay|day|hôm|hom)', clinical_text)
+            if dur_match:
+                duration_val = int(dur_match.group(1)) / 365.0
+            else:
+                dur_match = re.search(r'(\d+)\s*(?:năm|nam|year)', clinical_text)
+                if dur_match:
+                    duration_val = min(int(dur_match.group(1)), 30) * 365 / 365.0
+
+    # --- Symptoms ---
+    symptom_val = 0.0  # default: none
+    if any(w in clinical_text for w in ["chảy máu", "chay mau", "rỉ dịch", "ri dich", "bleeding", "loét", "loet"]):
+        symptom_val = 1.0
+    elif any(w in clinical_text for w in ["đau", "dau", "rát", "rat", "pain", "nhức", "nhuc", "buốt"]):
+        symptom_val = 0.6
+    elif any(w in clinical_text for w in ["ngứa", "ngua", "itch", "châm chích", "cham chich"]):
+        symptom_val = 0.3
+
+    # --- Skin type ---
+    skin_val = 0.4  # default: Type III (common in Vietnam)
+    skin_keywords = {
+        0.0: ["type i", "trắng bệch", "trang bech", "rất trắng"],
+        0.2: ["type ii", "trắng sáng", "trang sang", "trắng"],
+        0.4: ["type iii", "bánh mật", "banh mat", "vàng", "vang"],
+        0.6: ["type iv", "nâu nhạt", "nau nhat", "ngăm", "ngam"],
+        0.8: ["type v", "nâu đậm", "nau dam", "nâu sẫm"],
+        1.0: ["type vi", "đen", "den", "rất đen"],
+    }
+    for val, keywords in skin_keywords.items():
+        if any(kw in clinical_text for kw in keywords):
+            skin_val = val
             break
 
-    age      = float(form_data.get("age", 45)) / 100.0
-    sex      = 1.0 if form_data.get("sex", "male") == "male" else 0.0
-    site     = site_val
-    duration = float(form_data.get("duration", 30)) / 365.0
-    symptom  = symptom_val
-    skin_type = skin_map.get(form_data.get("skin_type", "III"), 0.4)
-    fh       = 1.0 if form_data.get("family_history", "no") == "yes" else 0.0
+    # --- Family history ---
+    fh_val = 0.0  # default: no
+    if any(w in clinical_text for w in ["tiền sử", "tien su", "gia đình", "gia dinh", "family", "cha", "mẹ", "me", "anh", "chị", "chi", "di truyền", "di truyen"]):
+        fh_val = 1.0
 
-    clinical_tensor = torch.tensor([[age, sex, site, duration, symptom, skin_type, fh]], dtype=torch.float32).to(device)
+    clinical_tensor = torch.tensor([[age_val, sex_val, site_val, duration_val, symptom_val, skin_val, fh_val]], dtype=torch.float32).to(device)
 
-    # Inference
+    # ── Test-Time Augmentation (TTA) ──
+    # Chay inference tren 4 bien the cua anh (goc, lat ngang, lat doc, lat ca hai)
+    # roi lay trung binh xac suat → tang do chinh xac ~2-3%
     with torch.no_grad():
+        tta_probs_list = []
+
+        # 1. Anh goc
         logits = model(img_tensor, clinical_tensor)
-        probs = torch.nn.functional.softmax(logits, dim=1)[0]
+        tta_probs_list.append(torch.nn.functional.softmax(logits, dim=1)[0])
+
+        # 2. Lat ngang (horizontal flip)
+        img_hflip = torch.flip(img_tensor, dims=[3])
+        logits_h = model(img_hflip, clinical_tensor)
+        tta_probs_list.append(torch.nn.functional.softmax(logits_h, dim=1)[0])
+
+        # 3. Lat doc (vertical flip)
+        img_vflip = torch.flip(img_tensor, dims=[2])
+        logits_v = model(img_vflip, clinical_tensor)
+        tta_probs_list.append(torch.nn.functional.softmax(logits_v, dim=1)[0])
+
+        # 4. Lat ca ngang + doc
+        img_hvflip = torch.flip(img_tensor, dims=[2, 3])
+        logits_hv = model(img_hvflip, clinical_tensor)
+        tta_probs_list.append(torch.nn.functional.softmax(logits_hv, dim=1)[0])
+
+        # Trung binh xac suat 4 phien ban
+        probs = torch.stack(tta_probs_list).mean(dim=0)
 
     probs_np = probs.cpu().numpy()
     classes  = base_config["labels"]["classes"]
